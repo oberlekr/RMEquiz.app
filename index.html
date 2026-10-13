@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="pl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizLive - RME Safety Week 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- QRCode Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-slate-100 min-h-full flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="router.navigate('home')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent">RME Safety Week 2026</span>
+                    <span class="block text-[10px] uppercase tracking-widest text-indigo-400 font-semibold">Poziom Ekspert — Bezpieczeństwo RME</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div id="cloud-sync-badge" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="cloud-status-text">Chmura Aktywna</span>
+                </div>
+                <button onclick="router.navigate('admin-login')" class="px-3 py-2 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                    <span class="hidden sm:inline">Panel Administratora</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="w-full max-w-4xl mx-auto">
+            
+            <!-- VIEW: HOME / PARTICIPANT LOGIN -->
+            <div id="view-home" class="view-section animate-fade-in">
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-10 backdrop-blur-xl relative overflow-hidden">
+                    <div class="absolute -right-20 -top-20 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -left-20 -bottom-20 w-60 h-60 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="text-center max-w-lg mx-auto mb-8">
+                        <span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3">
+                            <i class="fa-solid fa-bolt mr-1.5"></i> Quiz RME Safety Week 2026
+                        </span>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">Sprawdź swoją wiedzę z zakresu BHP i RME!</h1>
+                        <p class="text-slate-400 text-sm sm:text-base">Masz <strong>1 minutę (60 sek.)</strong> na odpowiedź na każde z <strong>10 losowych pytań</strong>. Twój całkowity czas rozwiązywania zostanie uwzględniony w rankingu.</p>
+                    </div>
+
+                    <!-- Status Notification Banner -->
+                    <div id="quiz-status-banner" class="mb-6 p-4 rounded-xl border hidden transition-all duration-300">
+                        <div class="flex items-center space-x-3">
+                            <i id="status-icon" class="fa-solid text-xl"></i>
+                            <div>
+                                <h4 id="status-title" class="font-bold text-sm"></h4>
+                                <p id="status-desc" class="text-xs opacity-90"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="participant-form" onsubmit="handleParticipantJoin(event)" class="space-y-5 max-w-md mx-auto">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Login Amazon (np. amznlogin)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-500">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                                <input type="text" id="participant-name" required placeholder="np. jkowalski" 
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-900/50 p-3.5 rounded-xl border border-slate-700/60">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                                    <i class="fa-solid fa-qrcode"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-xs font-medium text-slate-200">Szybkie logowanie QR</span>
+                                    <span class="block text-[11px] text-slate-400">Symuluj zeskanowanie loginu z przepustki</span>
+                                </div>
+                            </div>
+                            <button type="button" onclick="simulateQRScan()" class="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition shadow-md shadow-indigo-600/30">
+                                Skanuj QR
+                            </button>
+                        </div>
+
+                        <button type="submit" id="join-btn" class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                            <span>Rozpocznij Quiz</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- VIEW: QUIZ ACTIVE INTERFACE -->
+            <div id="view-quiz" class="view-section hidden animate-fade-in">
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
+                    <!-- Quiz Header / Progress -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-700 gap-4">
+                        <div>
+                            <span id="quiz-category-badge" class="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">BHP / RME</span>
+                            <h2 class="text-lg font-bold text-white mt-1.5">Pytanie <span id="current-q-num">1</span> z <span id="total-q-num">10</span></h2>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2 bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-700">
+                                <i class="fa-solid fa-stopwatch text-amber-400"></i>
+                                <span id="question-timer" class="font-mono font-bold text-amber-400 text-sm">60s</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 block">Gracz</span>
+                                <span id="display-player-name" class="font-semibold text-sm text-indigo-200"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-slate-900 rounded-full h-2 mb-8 overflow-hidden border border-slate-700/50">
+                        <div id="quiz-progress-bar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-300" style="width: 10%;"></div>
+                    </div>
+
+                    <!-- Question Content -->
+                    <div class="mb-8">
+                        <h3 id="question-text" class="text-xl sm:text-2xl font-semibold text-white leading-snug"></h3>
+                        <p id="multi-select-hint" class="text-xs text-amber-400/90 mt-2 hidden"><i class="fa-solid fa-circle-info mr-1"></i> Wskazówka: Zaznacz wszystkie poprawne odpowiedzi, a następnie kliknij „Zatwierdź odpowiedź”.</p>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div id="options-container" class="grid grid-cols-1 gap-3.5 mb-8">
+                        <!-- Options injected dynamically -->
+                    </div>
+
+                    <!-- Footer Navigation -->
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-700">
+                        <div class="text-xs text-slate-400" id="quiz-footer-hint">
+                            <i class="fa-solid fa-circle-info mr-1"></i> Czas na jedno pytanie: 60 sekund
+                        </div>
+                        <button id="next-question-btn" onclick="handleNextQuestion()" disabled class="px-6 py-2.5 bg-indigo-600/50 text-white font-medium rounded-xl transition opacity-50 cursor-not-allowed">
+                            Dalej <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: QUIZ RESULTS SUMMARY -->
+            <div id="view-results" class="view-section hidden animate-fade-in">
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-10 backdrop-blur-xl text-center">
+                    <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-orange-500/20 mb-6 text-white text-3xl">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+
+                    <span class="text-xs font-semibold uppercase tracking-widest text-amber-400">Quiz Ukończony!</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1 mb-2">Gratulacje, <span id="res-player-name"></span>!</h2>
+                    <p class="text-slate-400 text-sm mb-8">Twój wynik wraz z czasem rozwiązania został zapisany.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
+                        <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-xl">
+                            <span class="block text-xs text-slate-400 uppercase font-medium">Zdobyte Punkty</span>
+                            <span id="res-score" class="text-3xl font-black text-indigo-400 mt-1 block">0 / 10</span>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-xl">
+                            <span class="block text-xs text-slate-400 uppercase font-medium">Skuteczność</span>
+                            <span id="res-percentage" class="text-3xl font-black text-emerald-400 mt-1 block">0%</span>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-xl">
+                            <span class="block text-xs text-slate-400 uppercase font-medium">Czas Rozwiązywania</span>
+                            <span id="res-time" class="text-3xl font-black text-purple-400 mt-1 block">0s</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button onclick="router.navigate('home')" class="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-house"></i>
+                            <span>Strona Główna</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: ADMIN LOGIN -->
+            <div id="view-admin-login" class="view-section hidden animate-fade-in">
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-10 backdrop-blur-xl max-w-md mx-auto">
+                    <div class="text-center mb-6">
+                        <div class="w-14 h-14 bg-indigo-500/20 text-indigo-400 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-3 border border-indigo-500/30">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">Panel Administratora</h2>
+                        <p class="text-slate-400 text-xs mt-1">Wprowadź kod PIN administratora</p>
+                    </div>
+
+                    <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                        <div>
+                            <input type="password" id="admin-pin-input" required placeholder="Kod PIN" 
+                                class="w-full px-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center tracking-widest text-lg font-mono">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition">
+                            Zaloguj się
+                        </button>
+                        <button type="button" onclick="router.navigate('home')" class="w-full py-2.5 text-xs text-slate-400 hover:text-white transition">
+                            Anuluj i wróc do quizu
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- VIEW: ADMIN DASHBOARD -->
+            <div id="view-admin-dashboard" class="view-section hidden animate-fade-in">
+                <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-700 gap-4">
+                        <div>
+                            <span class="text-xs font-semibold uppercase tracking-widest text-indigo-400">Zarządzanie Systemem</span>
+                            <h2 class="text-2xl font-bold text-white mt-1">Panel Administratora</h2>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="router.navigate('home')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-medium transition">
+                                <i class="fa-solid fa-globe mr-1.5"></i> Widok Uczestnika
+                            </button>
+                            <button onclick="handleAdminLogout()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-medium transition">
+                                <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Wyloguj
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Admin Tabs Navigation -->
+                    <div class="flex border-b border-slate-700 mb-6 space-x-6 overflow-x-auto">
+                        <button onclick="switchAdminTab('results')" id="adm-tab-results" class="pb-3 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap">
+                            <i class="fa-solid fa-ranking-star mr-2"></i> Wyniki na Żywo
+                        </button>
+                        <button onclick="switchAdminTab('settings')" id="adm-tab-settings" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
+                            <i class="fa-solid fa-clock mr-2"></i> Ramki Czasowe & Status
+                        </button>
+                        <button onclick="switchAdminTab('questions')" id="adm-tab-questions" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
+                            <i class="fa-solid fa-clipboard-question mr-2"></i> Baza Pytań (<span id="question-count-badge">20</span>)
+                        </button>
+                        <button onclick="switchAdminTab('qr')" id="adm-tab-qr" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
+                            <i class="fa-solid fa-qrcode mr-2"></i> Kod QR Dostęp
+                        </button>
+                    </div>
+
+                    <!-- ADMIN TAB: RESULTS -->
+                    <div id="admin-content-results" class="admin-tab-content space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-base font-bold text-white">Wyniki Uczestników w Czasie Rzeczywistym</h3>
+                            <button onclick="loadLeaderboard()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs rounded-lg text-slate-200 transition">
+                                <i class="fa-solid fa-rotate mr-1"></i> Odśwież
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-700 text-xs uppercase tracking-wider text-slate-400">
+                                        <th class="py-3 px-4">Miejsce</th>
+                                        <th class="py-3 px-4">Login Amazon</th>
+                                        <th class="py-3 px-4 text-center">Wynik</th>
+                                        <th class="py-3 px-4 text-right">Czas Rozwiązywania</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-leaderboard-tbody" class="divide-y divide-slate-700/50 text-sm">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN TAB: SETTINGS & TIME WINDOWS -->
+                    <div id="admin-content-settings" class="admin-tab-content space-y-6 hidden">
+                        <div class="bg-slate-900/60 p-6 rounded-xl border border-slate-700 space-y-4">
+                            <h3 class="text-base font-bold text-white flex items-center">
+                                <i class="fa-solid fa-calendar-days text-indigo-400 mr-2"></i> Konfiguracja Ramek Czasowych Quizu
+                            </h3>
+                            <p class="text-xs text-slate-400">Określ, czy quiz jest aktualnie otwarty dla uczestników, czy kontrolowany harmonogramem.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                                <label class="cursor-pointer bg-slate-800 border border-slate-700 hover:border-indigo-500 p-4 rounded-xl flex flex-col justify-between transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold text-sm text-white">Zawsze Otwarty</span>
+                                        <input type="radio" name="quiz-mode" value="always" onchange="updateQuizSettings('always')" class="text-indigo-600 focus:ring-indigo-500">
+                                    </div>
+                                    <span class="text-xs text-slate-400">Quiz jest stale aktywny i dostępny dla każdego.</span>
+                                </label>
+                                <label class="cursor-pointer bg-slate-800 border border-slate-700 hover:border-indigo-500 p-4 rounded-xl flex flex-col justify-between transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold text-sm text-white">Harmonogram Czasowy</span>
+                                        <input type="radio" name="quiz-mode" value="schedule" onchange="updateQuizSettings('schedule')" class="text-indigo-600 focus:ring-indigo-500">
+                                    </div>
+                                    <span class="text-xs text-slate-400">Dostępny w określonych godzinach i dniach.</span>
+                                </label>
+                                <label class="cursor-pointer bg-slate-800 border border-slate-700 hover:border-indigo-500 p-4 rounded-xl flex flex-col justify-between transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold text-sm text-white">Zamknięty Ręcznie</span>
+                                        <input type="radio" name="quiz-mode" value="closed" onchange="updateQuizSettings('closed')" class="text-indigo-600 focus:ring-indigo-500">
+                                    </div>
+                                    <span class="text-xs text-slate-400">Blokuje napływ nowych uczestników natychmiastowo.</span>
+                                </label>
+                            </div>
+
+                            <div id="schedule-inputs" class="hidden pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-800">
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase text-slate-300 mb-1">Data i Czas Startu</label>
+                                    <input type="datetime-local" id="sched-start" onchange="saveScheduleTimes()" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase text-slate-300 mb-1">Data i Czas Końcowy</label>
+                                    <input type="datetime-local" id="sched-end" onchange="saveScheduleTimes()" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADMIN TAB: QUESTIONS MANAGEMENT -->
+                    <div id="admin-content-questions" class="admin-tab-content space-y-6 hidden">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="text-base font-bold text-white">Baza Pytań Quizu</h3>
+                                <p class="text-xs text-slate-400">Przeglądaj, dodawaj lub edytuj pytania BHP / RME Safety Week 2026.</p>
+                            </div>
+                            <button onclick="openQuestionModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-2 w-fit">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Dodaj Nowe Pytanie</span>
+                            </button>
+                        </div>
+                        <div id="admin-questions-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                            <!-- Questions list injected -->
+                        </div>
+                    </div>
+
+                    <!-- ADMIN TAB: QR CODE -->
+                    <div id="admin-content-qr" class="admin-tab-content space-y-6 hidden text-center">
+                        <div class="max-w-md mx-auto bg-slate-900/60 p-8 rounded-2xl border border-slate-700">
+                            <h3 class="text-lg font-bold text-white mb-2">Kod QR do Szybkiego Wejścia</h3>
+                            <p class="text-xs text-slate-400 mb-6">Zeskanuj ten kod telefonem lub udostępnij uczestnikom, aby natychmiast przejść do strony logowania quizu.</p>
+                            
+                            <div class="bg-white p-4 rounded-xl inline-block shadow-lg mb-6">
+                                <div id="qrcode-container" class="flex justify-center"></div>
+                            </div>
+
+                            <div class="flex items-center justify-center space-x-3">
+                                <input type="text" readonly id="quiz-url-input" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300 text-center font-mono" value="">
+                                <button onclick="copyQuizUrl()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition whitespace-nowrap">
+                                    Kopiuj Link
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- QUESTION MODAL (Add/Edit) -->
+    <div id="question-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8 w-full max-w-lg shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+            <h3 id="modal-title" class="text-xl font-bold text-white mb-4">Dodaj Nowe Pytanie</h3>
+            <form onsubmit="handleSaveQuestion(event)" class="space-y-4">
+                <input type="hidden" id="edit-q-id">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-300 mb-1">Dziedzina / Kategoria</label>
+                    <input type="text" id="q-category" required placeholder="np. LOTO, ŚOI, Bezpieczeństwo Pożarowe" 
+                        class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-300 mb-1">Treść Pytania</label>
+                    <textarea id="q-text" required rows="2" placeholder="Wpisz treść pytania..." 
+                        class="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold uppercase text-slate-300">Odpowiedzi (zaznacz poprawne - jedna lub wiele)</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="correct-chk-0" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                        <input type="text" id="opt-0" required placeholder="Odpowiedź A" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="correct-chk-1" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                        <input type="text" id="opt-1" required placeholder="Odpowiedź B" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="correct-chk-2" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                        <input type="text" id="opt-2" required placeholder="Odpowiedź C" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="correct-chk-3" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                        <input type="text" id="opt-3" required placeholder="Odpowiedź D" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs">
+                    </div>
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeQuestionModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Anuluj
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition">
+                        Zapisz Pytanie
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CUSTOM NOTIFICATION MODAL -->
+    <div id="alert-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center animate-fade-in">
+            <div id="alert-icon-wrap" class="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4"></div>
+            <h3 id="alert-title" class="text-lg font-bold text-white mb-2">Komunikat</h3>
+            <p id="alert-msg" class="text-slate-300 text-xs mb-6"></p>
+            <button onclick="closeAlertModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition">
+                Rozumiem
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let globalSyncTimer = null;
+        let isServerConnected = false;
+
+        // Default question bank
+        const DEFAULT_QUESTIONS = [
+            {
+                id: 'q1',
+                category: 'LOTO / Maszyny',
+                text: 'Przechodzisz obok strefy, gdzie technik RME zdjęł właśnie kłódkę i zawieszkę LOTO i odszedł po narzędzie, nie uruchamiając jeszcze maszyny. Które stwierdzenia są prawidłowe?',
+                options: [
+                    'A) Skoro LOTO zdjęto, maszyna jest już bezpieczna i mogę wejść do strefy',
+                    'B) Zdjęcie LOTO nie oznacza, że strefa jest zwolniona dla pieszych — nie wchodzę bez wyraźnej zgody osoby odpowiedzialnej',
+                    'C) Mogę samodzielnie uruchomić maszynę, skoro zabezpieczenie usunięto',
+                    'D) Traktuję maszynę jak mogącą ruszyć w każdej chwili i trzymam się wyznaczonej trasy'
+                ],
+                correct: [1, 3]
+            },
+            {
+                id: 'q2',
+                category: 'Bezpieczeństwo Maszyn',
+                text: 'Który opis NAJLEPIEJ oddaje, dlaczego ponowne uruchomienie maszyny (re-energizacja) jest etapem o podwyższonym ryzyku?',
+                options: [
+                    'A) Bo zużywa najwięcej energii elektrycznej w cyklu',
+                    'B) Bo maszyna zaczyna się poruszać — osoby lub narzędzia w strefie mogą zostać pochwycone, dlatego strefa musi być pusta i sprawdzona',
+                    'C) Bo to moment, w którym najczęściej przepala się bezpiecznik',
+                    'D) Bo dopiero wtedy zakłada się osłony'
+                ],
+                correct: [1]
+            },
+            {
+                id: 'q3',
+                category: 'Energia Resztkowa',
+                text: 'Które z poniższych mogą uwolnić energię i zranić, mimo że główny wyłącznik jest w pozycji „OFF”?',
+                options: [
+                    'A) Napięty pas lub ściśnięta sprężyna',
+                    'B) Resztkowe ciśnienie w układzie pneumatycznym lub hydraulicznym',
+                    'C) Uniesiony element, który może opaść pod własnym ciężarem (grawitacja)',
+                    'D) Wirujący element kontynuujący ruch bezwładny po odcięciu zasilania'
+                ],
+                correct: [0, 1, 2, 3]
+            },
+            {
+                id: 'q4',
+                category: 'Zagrania Awaryjne',
+                text: 'Czujesz zapach spalenizny i widzisz dym spod szafy sterowniczej przenośnika w szczycie wysyłki. Która reakcja jest NAJbezpieczniejsza?',
+                options: [
+                    'A) Otworzyć szafę, by sprawdzić źródło i odłączyć pojedynczy przewód',
+                    'B) Spryskać szafę wodą z najbliższego źródła',
+                    'C) Nie otwierać szafy, oddalić siebie i innych, powiadomić przełożonego/służby i w razie potrzeby użyć gaśnicy właściwej do urządzeń elektrycznych',
+                    'D) Dokończyć bieżącą paletę i zgłosić po zmianie, jeśli dym nie zniknie'
+                ],
+                correct: [2]
+            },
+            {
+                id: 'q5',
+                category: 'Osłony i Usterki',
+                text: 'Osłona napędu jest zamontowana, ale słyszysz nietypowy stukot, a obok leży poluzowana śruba. Które działania są właściwe?',
+                options: [
+                    'A) Dokręcić znalezioną śrubę, by osłona lepiej trzymała',
+                    'B) Zignorować stukot, skoro osłona jest na miejscu',
+                    'C) Wstrzymać korzystanie z tego miejsca i zgłosić objawy (stukot + luźny element) do RME',
+                    'D) Zabezpieczyć/oznaczyć miejsce, aby inni nie korzystali, do czasu oceny technika'
+                ],
+                correct: [2, 3]
+            },
+            {
+                id: 'q6',
+                category: 'Praca na Wysokości',
+                text: 'Dotyczy drabin platformowych (Network Action, wrzesień 2026). Która interpretacja żółtego łańcucha ok. metr nad podłożem i taśmy w żółto-czarne pasy jest prawidłowa?',
+                options: [
+                    'A) To element wyłącznie dekoracyjny',
+                    'B) To znak, że drabina przeszła przegląd i jest dopuszczona',
+                    'C) To celowy odstraszacz/ograniczenie dostępu wynikające z ryzyka — nie wchodzić i nie zdejmować łańcucha',
+                    'D) To oznaczenie rezerwacji drabiny dla konkretnej zmiany'
+                ],
+                correct: [2]
+            },
+            {
+                id: 'q7',
+                category: 'Praca na Wysokości',
+                text: 'Kolega proponuje sposoby „na szybko” sięgnięcia po przedmiot z wysokości. Które są niedopuszczalne?',
+                options: [
+                    'A) Wejście na drabinę oznaczoną łańcuchem/taśmą „tylko na chwilę”',
+                    'B) Wspinaczka po poprzeczkach regału lub stanięcie na palecie uniesionej wózkiem',
+                    'C) Użycie sprawnej, zatwierdzonej drabiny zgodnie z instrukcją i zasadą trzech punktów podparcia',
+                    'D) Stanięcie na krześle biurowym przytrzymywanym przez kolegę'
+                ],
+                correct: [0, 1, 3]
+            },
+            {
+                id: 'q8',
+                category: 'Ruch PIT i Pieszych',
+                text: 'Idziesz przez strefę ruchu wózków/pojazdów PIT przy dużym hałasie i ograniczonej widoczności za regałem. Które zachowania są prawidłowe?',
+                options: [
+                    'A) Zakładam, że operator mnie widzi, bo mam kamizelkę, i idę dalej',
+                    'B) Zatrzymuję się przed narożnikiem, nawiązuję kontakt wzrokowy z operatorem i ustępuję pierwszeństwa pojazdowi',
+                    'C) Korzystam wyłącznie z wyznaczonych przejść dla pieszych',
+                    'D) Przebiegam przed pojazdem, gdy wydaje mi się, że zdążę'
+                ],
+                correct: [1, 2]
+            },
+            {
+                id: 'q9',
+                category: 'Kultura Bezpieczeństwa',
+                text: 'Zgłaszasz near miss, w którym nikt nie ucierpiał i nic się nie uszkodziło. Który pogląd jest prawidłowy?',
+                options: [
+                    'A) Nie ma czego zgłaszać, bo nie było urazu ani szkody',
+                    'B) Zgłoszenie near miss to obowiązek wyłącznie przełożonego',
+                    'C) Near miss zgłaszam, bo ujawnia ukryte zagrożenie i pozwala je usunąć zanim dojdzie do urazu',
+                    'D) Near miss zgłasza się dopiero przy trzecim powtórzeniu'
+                ],
+                correct: [2]
+            },
+            {
+                id: 'q10',
+                category: 'Prawa i Rola Pracownika',
+                text: 'Które stwierdzenia o roli i prawach pracownika niebędącego technikiem w systemie bezpieczeństwa RME są prawidłowe?',
+                options: [
+                    'A) Mam prawo odmówić pracy w warunkach, które racjonalnie uważam za niebezpieczne, i zgłosić to',
+                    'B) W nagłej sytuacji mogę samodzielnie naruszyć LOTO lub wejść za osłonę, jeśli przyspieszy to pracę',
+                    'C) Powinienem znać lokalizację wyjść ewakuacyjnych, punktów zbiórki i najbliższego sprzętu ppoż. w swojej strefie',
+                    'D) Zgłaszanie zagrożeń i near miss dotyczy każdego, nie tylko techników i kierowników'
+                ],
+                correct: [0, 2, 3]
+            },
+            {
+                id: 'q11',
+                category: 'Uprawnienia i RME',
+                text: 'Technik prosi Cię o „przytrzymanie na chwilę” panelu, podczas gdy wykonuje prace serwisowe wewnątrz maszyny objętej LOTO. Jak reagujesz?',
+                options: [
+                    'A) Pomagam, skoro technik prosi — on wie, co robi',
+                    'B) Odmawiam udziału w pracach, do których nie mam uprawnień ani przeszkolenia, i proponuję, by znalazł upoważnioną osobę',
+                    'C) Wchodzę do maszyny razem z nim, by szybciej skończyć',
+                    'D) Zgłaszam przełożonemu, jeśli czuję presję do wykonywania zadań poza moją rolą'
+                ],
+                correct: [1, 3]
+            },
+            {
+                id: 'q12',
+                category: 'ŚOI',
+                text: 'Które z poniższych są prawidłowymi zasadami dotyczącymi środków ochrony indywidualnej (ŚOI) na magazynie?',
+                options: [
+                    'A) Obuwie ochronne i kamizelka odblaskowa tam, gdzie są wymagane',
+                    'B) ŚOI zakładam dopiero, gdy zauważę przełożonego',
+                    'C) Uszkodzone ŚOI (np. pęknięte okulary) wymieniam, zanim zacznę pracę',
+                    'D) ŚOI dobieram do zadania/strefy, a nie „jedne na wszystko”'
+                ],
+                correct: [0, 2, 3]
+            },
+            {
+                id: 'q13',
+                category: 'Zabezpieczenia Maszyn',
+                text: 'Zauważasz, że czujnik/fotokomórka bezpieczeństwa przy przenośniku jest zaklejona taśmą, przez co osłona świetlna nie zatrzymuje linii. Co robisz?',
+                options: [
+                    'A) Zostawiam — ktoś pewnie zrobił to celowo dla wydajności',
+                    'B) Natychmiast zgłaszam to jako obejście zabezpieczenia (bypass) i nie korzystam z linii do czasu usunięcia',
+                    'C) Sam zrywam taśmę i uruchamiam linię dalej',
+                    'D) Traktuję to jako poważne zagrożenie — obejście urządzenia ochronnego eliminuje warstwę bezpieczeństwa'
+                ],
+                correct: [1, 3]
+            },
+            {
+                id: 'q14',
+                category: 'Usuwanie Zatorów',
+                text: 'Podczas pracy paczka na przenośniku zablokowała się i linia stoi. Jak bezpiecznie usunąć zator?',
+                options: [
+                    'A) Sięgam ręką pod osłonę, by szybko wyjąć paczkę, bo linia stoi',
+                    'B) Nie wkładam rąk w strefę ruchomych elementów; postępuję zgodnie z procedurą (zatrzymanie/zgłoszenie), bo linia może ruszyć bez ostrzeżenia',
+                    'C) Uderzam w paczkę, by przepchnąć ją dalej',
+                    'D) Wzywam osobę upoważnioną/technika, jeśli usunięcie wymaga wejścia w strefę zabezpieczoną'
+                ],
+                correct: [1, 3]
+            },
+            {
+                id: 'q15',
+                category: 'Zgłaszanie Zagrożeń',
+                text: 'Które sytuacje powinieneś zgłosić, nawet jeśli nie spowodowały urazu?',
+                options: [
+                    'A) Rozlany płyn na posadzce w ciągu komunikacyjnym',
+                    'B) Luźny lub brakujący element osłony maszyny',
+                    'C) Zablokowane lub zastawione wyjście ewakuacyjne',
+                    'D) Drabina z uszkodzonym stopniem pozostawiona w użyciu'
+                ],
+                correct: [0, 1, 2, 3]
+            },
+            {
+                id: 'q16',
+                category: 'Ewakuacja i PPOŻ',
+                text: 'Alarm ewakuacyjny włącza się podczas szczytu wysyłki. Które zachowania są prawidłowe?',
+                options: [
+                    'A) Dokończyć bieżącą paletę, a potem wyjść — kilka minut nie robi różnicy',
+                    'B) Przerwać pracę, bezpiecznie opuścić stanowisko i udać się najkrótszą wyznaczoną drogą do punktu zbiórki',
+                    'C) Nie korzystać z wind; stosować się do poleceń osób kierujących ewakuacją',
+                    'D) Zabrać ze sobą współpracownika, który mógł nie usłyszeć alarmu, jeśli jest to bezpieczne'
+                ],
+                correct: [1, 2, 3]
+            },
+            {
+                id: 'q17',
+                category: 'Praca na Wysokości',
+                text: 'Co oznacza zasada „trzech punktów podparcia” i kiedy ma zastosowanie?',
+                options: [
+                    'A) Dotyczy wyłącznie techników pracujących na wysokości',
+                    'B) To utrzymywanie kontaktu z drabiną/konstrukcją w trzech punktach (np. dwie stopy + jedna ręka) podczas wchodzenia i schodzenia',
+                    'C) Zmniejsza ryzyko upadku i obowiązuje także pracowników niebędących technikami przy korzystaniu z drabin',
+                    'D) Oznacza, że na drabinie mogą stać maksymalnie trzy osoby'
+                ],
+                correct: [1, 2]
+            },
+            {
+                id: 'q18',
+                category: 'Gaszynie Pożarów',
+                text: 'Którą gaśnicę/metodę zastosować w pierwszej kolejności przy pożarze urządzenia elektrycznego pod napięciem?',
+                options: [
+                    'A) Wodę z węża hydrantowego',
+                    'B) Gaśnicę przeznaczoną do urządzeń elektrycznych (np. CO₂/proszkową), zgodnie z oznaczeniem i przeszkoleniem',
+                    'C) Koc gaśniczy narzucony bezpośrednio na szafę pod napięciem jako metodę podstawową',
+                    'D) Jeśli pożar wykracza poza zarzewie — ewakuować się i wezwać pomoc zamiast gasić samodzielnie'
+                ],
+                correct: [1, 3]
+            },
+            {
+                id: 'q19',
+                category: 'Kultura Bezpieczeństwa',
+                text: 'Które zachowania budują właściwą kulturę bezpieczeństwa podczas RME Safety Week?',
+                options: [
+                    'A) Zgłaszanie near miss i drobnych usterek, zanim urosną do wypadku',
+                    'B) Zwracanie uwagi koledze, który omija zabezpieczenie, nawet jeśli to niewygodne',
+                    'C) „Niewidzenie” drobnych naruszeń, by nie psuć atmosfery w zespole',
+                    'D) Udział w odprawach bezpieczeństwa i zadawanie pytań, gdy coś jest niejasne'
+                ],
+                correct: [0, 1, 3]
+            },
+            {
+                id: 'q20',
+                category: 'Procedury BHP',
+                text: 'Nowy pracownik pyta Cię, gdzie znaleźć zasady bezpieczeństwa i do kogo zgłaszać zagrożenia. Które odpowiedzi są prawidłowe?',
+                options: [
+                    'A) Na tablicach BHP, w oznaczeniach w strefie i podczas szkolenia stanowiskowego',
+                    'B) U przełożonego oraz w zespole RME/WHS',
+                    'C) Nie trzeba tego wiedzieć — wystarczy robić swoje zadania',
+                    'D) Zagrożenie może zgłosić każdy pracownik, nie tylko przełożony'
+                ],
+                correct: [0, 1, 3]
+            }
+        ];
+
+        // Runtime State
+        let quizState = {
+            activeView: 'home',
+            playerName: '',
+            questionsPool: [],
+            currentQuestions: [],
+            currentIndex: 0,
+            score: 0,
+            selectedOptions: [],
+            startTime: null,
+            timerInterval: null,
+            timeRemaining: 60,
+            settings: { mode: 'always', start: '', end: '' }
+        };
+
+        async function initApp() {
+            updateCloudBadge('connecting', 'Łączenie z serwerem...');
+            try {
+                const resp = await fetch('/api/state');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+                quizState.questionsPool = (data.questions && data.questions.length) ? data.questions : [...DEFAULT_QUESTIONS];
+                quizState.settings = data.settings || quizState.settings;
+                isServerConnected = true;
+                updateCloudBadge('online', 'Serwer Aktywny');
+            } catch (err) {
+                console.warn("Błąd połączenia z serwerem, działam w trybie lokalnym (bez współdzielenia wyników):", err);
+                isServerConnected = false;
+                updateCloudBadge('relay', 'Tryb Lokalny (offline)');
+                quizState.questionsPool = [...DEFAULT_QUESTIONS];
+            }
+
+            updateUIStatus();
+            renderAdminQuestionsList();
+            await loadLeaderboard();
+
+            // Global auto-refresh timer every 4s for all devices (keeps admin leaderboard & join screen fresh)
+            if (globalSyncTimer) clearInterval(globalSyncTimer);
+            globalSyncTimer = setInterval(() => {
+                if (quizState.activeView === 'admin-dashboard') {
+                    loadLeaderboard();
+                }
+            }, 4000);
+        }
+
+        function updateCloudBadge(status, text) {
+            const badge = document.getElementById('cloud-sync-badge');
+            const textEl = document.getElementById('cloud-status-text');
+            if (!badge || !textEl) return;
+
+            textEl.textContent = text;
+            if (status === 'online') {
+                badge.className = "px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1.5";
+            } else if (status === 'relay') {
+                badge.className = "px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center space-x-1.5";
+            } else {
+                badge.className = "px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-700 text-slate-300 border border-slate-600 flex items-center space-x-1.5";
+            }
+        }
+
+        // Router
+        window.router = {
+            navigate: function(viewName) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                const target = document.getElementById('view-' + viewName);
+                if (target) {
+                    target.classList.remove('hidden');
+                    quizState.activeView = viewName;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    if (viewName === 'admin-dashboard') {
+                        loadLeaderboard();
+                        renderAdminQuestionsList();
+                        setupQRCode();
+                    }
+                }
+            }
+        };
+
+        function updateUIStatus() {
+            const banner = document.getElementById('quiz-status-banner');
+            const icon = document.getElementById('status-icon');
+            const title = document.getElementById('status-title');
+            const desc = document.getElementById('status-desc');
+            const joinBtn = document.getElementById('join-btn');
+
+            const { mode, start, end } = quizState.settings;
+            let isOpen = true;
+            let statusText = "";
+            const now = new Date();
+
+            if (mode === 'closed') {
+                isOpen = false;
+                statusText = "Quiz został zamknięty przez administratora.";
+            } else if (mode === 'schedule') {
+                if (start && new Date(start) > now) {
+                    isOpen = false;
+                    statusText = `Quiz rozpocznie się: ${new Date(start).toLocaleString('pl-PL')}`;
+                } else if (end && new Date(end) < now) {
+                    isOpen = false;
+                    statusText = `Quiz zakończył się w dniu: ${new Date(end).toLocaleString('pl-PL')}`;
+                }
+            }
+
+            if (!isOpen) {
+                banner.className = "mb-6 p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-300 block";
+                icon.className = "fa-solid fa-triangle-exclamation text-rose-400";
+                title.textContent = "Quiz Niedostępny";
+                desc.textContent = statusText;
+                joinBtn.disabled = true;
+                joinBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                banner.className = "mb-6 p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 block";
+                icon.className = "fa-solid fa-circle-check text-emerald-400";
+                title.textContent = "Quiz Aktywny";
+                desc.textContent = "Dostępne 10 losowych pytań RME Safety Week 2026. Czas na każde pytanie: 60 sek.";
+                joinBtn.disabled = false;
+                joinBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            const radio = document.querySelector(`input[name="quiz-mode"][value="${mode}"]`);
+            if (radio) radio.checked = true;
+            if (start) document.getElementById('sched-start').value = start;
+            if (end) document.getElementById('sched-end').value = end;
+            if (mode === 'schedule') {
+                document.getElementById('schedule-inputs').classList.remove('hidden');
+            } else {
+                document.getElementById('schedule-inputs').classList.add('hidden');
+            }
+        }
+
+        function setupQRCode() {
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = "";
+            const currentUrl = window.location.href.split('#')[0];
+            document.getElementById('quiz-url-input').value = currentUrl;
+            
+            try {
+                new QRCode(container, {
+                    text: currentUrl,
+                    width: 160,
+                    height: 160,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (e) {
+                container.innerHTML = "<span class='text-xs text-slate-500'>Błąd generowania QR</span>";
+            }
+        }
+
+        window.simulateQRScan = function() {
+            const randomLogins = ['jkowal', 'pwisniew', 'kwojcik', 'mkamin', 'mlewand'];
+            const chosen = randomLogins[Math.floor(Math.random() * randomLogins.length)];
+            document.getElementById('participant-name').value = chosen;
+            showAlert("Skanowanie QR", `Pomyślnie wczytano login Amazon: ${chosen}`, "success");
+        }
+
+        window.copyQuizUrl = function() {
+            const input = document.getElementById('quiz-url-input');
+            input.select();
+            document.execCommand('copy');
+            showAlert("Skopiowano", "Link do quizu został skopiowany do schowka.", "success");
+        }
+
+        window.handleParticipantJoin = async function(event) {
+            event.preventDefault();
+            const rawNameInput = document.getElementById('participant-name').value.trim();
+            if (!rawNameInput) return;
+
+            const sanitizedLogin = rawNameInput.toLowerCase();
+
+            // Check if login already exists in results (Firestore or Local)
+            const hasAttempted = await checkIfUserAlreadyCompleted(sanitizedLogin);
+            if (hasAttempted) {
+                showAlert(
+                    "Dostęp zablokowany", 
+                    `Login Amazon "${sanitizedLogin}" wykonał już ten quiz. Każdy użytkownik może rozwiązać test tylko raz.`, 
+                    "error"
+                );
+                return;
+            }
+
+            quizState.playerName = sanitizedLogin;
+            quizState.score = 0;
+            quizState.currentIndex = 0;
+            quizState.startTime = Date.now();
+
+            const shuffled = [...quizState.questionsPool].sort(() => 0.5 - Math.random());
+            quizState.currentQuestions = shuffled.slice(0, 10);
+
+            if (quizState.currentQuestions.length === 0) {
+                showAlert("Błąd", "Brak pytań w bazie.", "error");
+                return;
+            }
+
+            document.getElementById('display-player-name').textContent = quizState.playerName;
+            document.getElementById('total-q-num').textContent = quizState.currentQuestions.length;
+            router.navigate('quiz');
+            loadCurrentQuestion();
+        }
+
+        async function checkIfUserAlreadyCompleted(login) {
+            if (!login) return false;
+
+            try {
+                const resp = await fetch('/api/results');
+                if (resp.ok) {
+                    const results = await resp.json();
+                    if (results.some(r => r.playerName && r.playerName.toLowerCase() === login)) {
+                        return true;
+                    }
+                    return false;
+                }
+            } catch (e) {
+                console.warn("Błąd sprawdzania wyników na serwerze:", e);
+            }
+
+            // Fallback: local-only check (used only if server is unreachable)
+            try {
+                const localFallback = JSON.parse(localStorage.getItem('quiz_results_fallback') || '[]');
+                if (localFallback.some(r => r.playerName && r.playerName.toLowerCase() === login)) {
+                    return true;
+                }
+            } catch (e) {
+                console.warn("Błąd sprawdzania lokalnych wyników:", e);
+            }
+
+            return false;
+        }
+
+        function loadCurrentQuestion() {
+            const q = quizState.currentQuestions[quizState.currentIndex];
+            quizState.selectedOptions = [];
+
+            document.getElementById('current-q-num').textContent = quizState.currentIndex + 1;
+            document.getElementById('quiz-category-badge').textContent = q.category || 'BHP / RME';
+            document.getElementById('question-text').textContent = q.text;
+
+            const isMulti = Array.isArray(q.correct) && q.correct.length > 1;
+            const multiHint = document.getElementById('multi-select-hint');
+            if (isMulti) {
+                multiHint.classList.remove('hidden');
+            } else {
+                multiHint.classList.add('hidden');
+            }
+
+            const progressPct = ((quizState.currentIndex + 1) / quizState.currentQuestions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = progressPct + '%';
+
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = "";
+
+            q.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = `opt-btn-${idx}`;
+                btn.className = "w-full text-left p-4 bg-slate-900/80 hover:bg-slate-700/80 border border-slate-700/80 rounded-xl text-slate-200 transition flex items-center justify-between group";
+                btn.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span id="opt-badge-${idx}" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center font-bold text-xs transition">${String.fromCharCode(65 + idx)}</span>
+                        <span class="text-sm font-medium">${escapeHtml(optText)}</span>
+                    </div>
+                    <i id="opt-icon-${idx}" class="fa-regular fa-circle text-xs text-slate-600 group-hover:text-indigo-400 transition"></i>
+                `;
+                btn.onclick = () => toggleOption(idx);
+                optsContainer.appendChild(btn);
+            });
+
+            const nextBtn = document.getElementById('next-question-btn');
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            nextBtn.innerHTML = `Zatwierdź odpowiedź <i class="fa-solid fa-arrow-right ml-1.5"></i>`;
+
+            startQuestionTimer();
+        }
+
+        function startQuestionTimer() {
+            clearInterval(quizState.timerInterval);
+            quizState.timeRemaining = 60; // 1 minuta
+            const timerEl = document.getElementById('question-timer');
+            timerEl.textContent = quizState.timeRemaining + 's';
+
+            quizState.timerInterval = setInterval(() => {
+                quizState.timeRemaining--;
+                timerEl.textContent = quizState.timeRemaining + 's';
+                if (quizState.timeRemaining <= 0) {
+                    clearInterval(quizState.timerInterval);
+                    autoSubmitTimeout();
+                }
+            }, 1000);
+        }
+
+        function autoSubmitTimeout() {
+            evaluateAndAdvance();
+        }
+
+        function toggleOption(idx) {
+            const pos = quizState.selectedOptions.indexOf(idx);
+            if (pos > -1) {
+                quizState.selectedOptions.splice(pos, 1);
+            } else {
+                quizState.selectedOptions.push(idx);
+            }
+
+            const q = quizState.currentQuestions[quizState.currentIndex];
+            q.options.forEach((_, i) => {
+                const isSelected = quizState.selectedOptions.includes(i);
+                const btn = document.getElementById(`opt-btn-${i}`);
+                const badge = document.getElementById(`opt-badge-${i}`);
+                const icon = document.getElementById(`opt-icon-${i}`);
+
+                if (isSelected) {
+                    btn.classList.add('bg-indigo-600/30', 'border-indigo-500');
+                    badge.classList.add('bg-indigo-600', 'text-white');
+                    icon.className = "fa-solid fa-circle-check text-xs text-indigo-400 transition";
+                } else {
+                    btn.classList.remove('bg-indigo-600/30', 'border-indigo-500');
+                    badge.classList.remove('bg-indigo-600', 'text-white');
+                    icon.className = "fa-regular fa-circle text-xs text-slate-600 transition";
+                }
+            });
+
+            const nextBtn = document.getElementById('next-question-btn');
+            if (quizState.selectedOptions.length > 0) {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        window.handleNextQuestion = function() {
+            clearInterval(quizState.timerInterval);
+            evaluateAndAdvance();
+        }
+
+        function evaluateAndAdvance() {
+            try {
+                const q = quizState.currentQuestions[quizState.currentIndex];
+                if (q) {
+                    const correctArr = Array.isArray(q.correct) ? q.correct : [q.correct];
+                    
+                    const userSet = new Set(quizState.selectedOptions);
+                    const correctSet = new Set(correctArr);
+
+                    let isExactMatch = userSet.size === correctSet.size && [...userSet].every(val => correctSet.has(val));
+
+                    if (isExactMatch) {
+                        quizState.score++;
+                    }
+                }
+            } catch (err) {
+                console.warn("Błąd podczas sprawdzania odpowiedzi:", err);
+            }
+
+            quizState.currentIndex++;
+            if (quizState.currentIndex < quizState.currentQuestions.length) {
+                loadCurrentQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        async function finishQuiz() {
+            try {
+                clearInterval(quizState.timerInterval);
+                const totalTimeSec = Math.round((Date.now() - quizState.startTime) / 1000);
+                const totalQ = quizState.currentQuestions.length > 0 ? quizState.currentQuestions.length : 10;
+                const percentage = Math.round((quizState.score / totalQ) * 100);
+
+                const resPlayerNameEl = document.getElementById('res-player-name');
+                const resScoreEl = document.getElementById('res-score');
+                const resPercentageEl = document.getElementById('res-percentage');
+                const resTimeEl = document.getElementById('res-time');
+
+                if (resPlayerNameEl) resPlayerNameEl.textContent = quizState.playerName || 'Uczestnik';
+                if (resScoreEl) resScoreEl.textContent = `${quizState.score} / ${totalQ}`;
+                if (resPercentageEl) resPercentageEl.textContent = `${percentage}%`;
+                if (resTimeEl) resTimeEl.textContent = formatTime(totalTimeSec);
+
+                router.navigate('results');
+
+                const resultData = {
+                    id: 'res_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    playerName: quizState.playerName || 'Uczestnik',
+                    score: quizState.score,
+                    totalQuestions: totalQ,
+                    percentage: percentage,
+                    timeSec: totalTimeSec,
+                    timestamp: Date.now()
+                };
+
+                saveLocalResultFallback(resultData);
+                try {
+                    const resp = await fetch('/api/results/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(resultData)
+                    });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                } catch (e) {
+                    console.warn("Nie udało się zapisać wyniku na serwerze (zapisano tylko lokalnie):", e);
+                    showAlert("Uwaga", "Wynik zapisano lokalnie, ale nie udało się wysłać go na serwer — sprawdź połączenie i poinformuj administratora.", "error");
+                }
+
+            } catch (err) {
+                console.error("Krytyczny błąd podczas kończenia quizu:", err);
+                router.navigate('home');
+                showAlert("Błąd", "Wystąpił problem podczas finalizacji quizu. Spróbuj ponownie.", "error");
+            }
+        }
+
+        function formatTime(totalSec) {
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            if (mins > 0) {
+                return `${mins}m ${secs}s`;
+            }
+            return `${secs}s`;
+        }
+
+        function saveLocalResultFallback(resultData) {
+            try {
+                let localList = JSON.parse(localStorage.getItem('quiz_results_fallback') || '[]');
+                localList.push(resultData);
+                localStorage.setItem('quiz_results_fallback', JSON.stringify(localList));
+            } catch (e) {
+                console.warn("Błąd zapisu fallback:", e);
+            }
+        }
+
+        async function loadLeaderboard() {
+            let results = [];
+
+            try {
+                const resp = await fetch('/api/results');
+                if (resp.ok) {
+                    results = await resp.json();
+                } else {
+                    throw new Error('HTTP ' + resp.status);
+                }
+            } catch (e) {
+                console.warn("Błąd pobierania wyników z serwera, pokazuję tylko lokalne (jeśli są):", e);
+                try {
+                    results = JSON.parse(localStorage.getItem('quiz_results_fallback') || '[]');
+                } catch (e2) {}
+            }
+
+            results.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.timeSec - b.timeSec;
+            });
+
+            renderLeaderboardTable(results);
+        }
+
+        function renderLeaderboardTable(results) {
+            const adminTbody = document.getElementById('admin-leaderboard-tbody');
+            
+            if (!results || results.length === 0) {
+                const emptyHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500 text-xs">Brak wyników w rankingu.</td></tr>`;
+                if (adminTbody) adminTbody.innerHTML = emptyHTML;
+                return;
+            }
+
+            let html = "";
+            results.forEach((r, idx) => {
+                let badgeClass = "text-slate-300 font-semibold";
+                if (idx === 0) badgeClass = "text-amber-400 font-extrabold";
+                else if (idx === 1) badgeClass = "text-slate-200 font-bold";
+                else if (idx === 2) badgeClass = "text-amber-600 font-bold";
+
+                html += `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="py-3 px-4 ${badgeClass}">#${idx + 1}</td>
+                        <td class="py-3 px-4 font-medium text-white">${escapeHtml(r.playerName)}</td>
+                        <td class="py-3 px-4 text-center font-bold text-indigo-400">${r.score} / ${r.totalQuestions || 10} (${r.percentage}%)</td>
+                        <td class="py-3 px-4 text-right font-mono text-purple-300">${formatTime(r.timeSec)}</td>
+                    </tr>
+                `;
+            });
+
+            if (adminTbody) adminTbody.innerHTML = html;
+        }
+
+        // Admin Auth & Management
+        window.handleAdminLogin = function(event) {
+            event.preventDefault();
+            const pin = document.getElementById('admin-pin-input').value;
+            if (pin === 'RME2026') {
+                document.getElementById('admin-pin-input').value = "";
+                router.navigate('admin-dashboard');
+            } else {
+                showAlert("Błąd logowania", "Nieprawidłowy kod PIN administratora.", "error");
+            }
+        }
+
+        window.handleAdminLogout = function() {
+            router.navigate('home');
+        }
+
+        window.switchAdminTab = function(tabName) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="adm-tab-"]').forEach(el => {
+                el.classList.remove('border-indigo-500', 'text-indigo-400');
+                el.classList.add('border-transparent', 'text-slate-400');
+            });
+
+            const targetContent = document.getElementById('admin-content-' + tabName);
+            const targetTab = document.getElementById('adm-tab-' + tabName);
+
+            if (targetContent) targetContent.classList.remove('hidden');
+            if (targetTab) {
+                targetTab.classList.remove('border-transparent', 'text-slate-400');
+                targetTab.classList.add('border-indigo-500', 'text-indigo-400');
+            }
+        }
+
+        window.updateQuizSettings = function(mode) {
+            quizState.settings.mode = mode;
+            if (mode === 'schedule') {
+                document.getElementById('schedule-inputs').classList.remove('hidden');
+            } else {
+                document.getElementById('schedule-inputs').classList.add('hidden');
+                saveScheduleTimes();
+            }
+            saveSettingsToCloud();
+        }
+
+        window.saveScheduleTimes = function() {
+            quizState.settings.start = document.getElementById('sched-start').value;
+            quizState.settings.end = document.getElementById('sched-end').value;
+            saveSettingsToCloud();
+        }
+
+        async function saveSettingsToCloud() {
+            updateUIStatus();
+            try {
+                const resp = await fetch('/api/settings/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(quizState.settings)
+                });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            } catch (e) {
+                console.warn("Błąd zapisu ustawień na serwerze:", e);
+                showAlert("Uwaga", "Nie udało się zapisać ustawień na serwerze. Zmiana może nie być widoczna dla innych.", "error");
+            }
+        }
+
+        function renderAdminQuestionsList() {
+            const listContainer = document.getElementById('admin-questions-list');
+            const countBadge = document.getElementById('question-count-badge');
+            if (countBadge) countBadge.textContent = quizState.questionsPool.length;
+
+            if (!listContainer) return;
+            if (quizState.questionsPool.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Brak pytań w bazie.</p>`;
+                return;
+            }
+
+            let html = "";
+            quizState.questionsPool.forEach((q, idx) => {
+                const correctIndices = Array.isArray(q.correct) ? q.correct : [q.correct];
+                const correctLetters = correctIndices.map(i => String.fromCharCode(65 + i)).join(', ');
+
+                html += `
+                    <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${escapeHtml(q.category || 'BHP')}</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openQuestionModal('${q.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteQuestion('${q.id}')" class="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 rounded text-xs transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-white">Pytanie ${idx + 1}: ${escapeHtml(q.text)}</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-400 pt-1">
+                            ${q.options.map((opt, i) => `
+                                <div class="${correctIndices.includes(i) ? 'text-emerald-400 font-semibold' : ''}">
+                                    ${String.fromCharCode(65 + i)}) ${escapeHtml(opt)}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="text-[11px] text-indigo-300 pt-1 border-t border-slate-800">
+                            <strong>Poprawna odpowiedź:</strong> ${correctLetters}
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        window.openQuestionModal = function(qId = null) {
+            document.getElementById('edit-q-id').value = "";
+            document.getElementById('q-category').value = "";
+            document.getElementById('q-text').value = "";
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`opt-${i}`).value = "";
+                document.getElementById(`correct-chk-${i}`).checked = false;
+            }
+
+            if (qId) {
+                document.getElementById('modal-title').textContent = "Edytuj Pytanie";
+                const found = quizState.questionsPool.find(x => x.id === qId);
+                if (found) {
+                    document.getElementById('edit-q-id').value = found.id;
+                    document.getElementById('q-category').value = found.category || '';
+                    document.getElementById('q-text').value = found.text || '';
+                    const correctArr = Array.isArray(found.correct) ? found.correct : [found.correct];
+                    found.options.forEach((opt, i) => {
+                        if (document.getElementById(`opt-${i}`)) {
+                            document.getElementById(`opt-${i}`).value = opt;
+                        }
+                        if (document.getElementById(`correct-chk-${i}`)) {
+                            document.getElementById(`correct-chk-${i}`).checked = correctArr.includes(i);
+                        }
+                    });
+                }
+            } else {
+                document.getElementById('modal-title').textContent = "Dodaj Nowe Pytanie";
+            }
+
+            document.getElementById('question-modal').classList.remove('hidden');
+        }
+
+        window.closeQuestionModal = function() {
+            document.getElementById('question-modal').classList.add('hidden');
+        }
+
+        window.handleSaveQuestion = async function(event) {
+            event.preventDefault();
+            const editId = document.getElementById('edit-q-id').value;
+            const category = document.getElementById('q-category').value.trim();
+            const text = document.getElementById('q-text').value.trim();
+            
+            const options = [];
+            const correct = [];
+            for (let i = 0; i < 4; i++) {
+                options.push(document.getElementById(`opt-${i}`).value.trim());
+                if (document.getElementById(`correct-chk-${i}`).checked) {
+                    correct.push(i);
+                }
+            }
+
+            if (correct.length === 0) {
+                showAlert("Uwaga", "Musisz zaznaczyć przynajmniej jedną poprawną odpowiedź.", "error");
+                return;
+            }
+
+            const qId = editId || 'q_' + Date.now();
+            const qData = { id: qId, category, text, options, correct };
+
+            const existingIdx = quizState.questionsPool.findIndex(x => x.id === qId);
+            if (existingIdx > -1) {
+                quizState.questionsPool[existingIdx] = qData;
+            } else {
+                quizState.questionsPool.push(qData);
+            }
+
+            closeQuestionModal();
+            renderAdminQuestionsList();
+            updateUIStatus();
+
+            try {
+                const resp = await fetch('/api/questions/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(qData)
+                });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                showAlert("Sukces", "Pytanie zostało pomyślnie zapisane na serwerze.", "success");
+            } catch (e) {
+                console.warn("Błąd zapisu pytania na serwerze:", e);
+                showAlert("Uwaga", "Pytanie zapisano tylko lokalnie — nie udało się wysłać go na serwer.", "error");
+            }
+        }
+
+        window.deleteQuestion = async function(qId) {
+            quizState.questionsPool = quizState.questionsPool.filter(x => x.id !== qId);
+            renderAdminQuestionsList();
+            updateUIStatus();
+
+            try {
+                const resp = await fetch('/api/questions/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: qId })
+                });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                showAlert("Usunięto", "Pytanie zostało usunięte z bazy na serwerze.", "success");
+            } catch (e) {
+                console.warn("Błąd usuwania pytania na serwerze:", e);
+                showAlert("Uwaga", "Pytanie usunięto tylko lokalnie — nie udało się zsynchronizować z serwerem.", "error");
+            }
+        }
+
+        // Custom Notification Modal
+        function showAlert(title, msg, type = 'info') {
+            const modal = document.getElementById('alert-modal');
+            const titleEl = document.getElementById('alert-title');
+            const msgEl = document.getElementById('alert-msg');
+            const iconWrap = document.getElementById('alert-icon-wrap');
+
+            titleEl.textContent = title;
+            msgEl.textContent = msg;
+
+            if (type === 'success') {
+                iconWrap.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                iconWrap.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            } else if (type === 'error') {
+                iconWrap.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4 bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                iconWrap.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            } else {
+                iconWrap.className = "w-12 h-12 rounded-full mx-auto flex items-center justify-center text-xl mb-4 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30";
+                iconWrap.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        window.closeAlertModal = function() {
+            document.getElementById('alert-modal').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        window.onload = function() {
+            initApp();
+        }
+    </script>
+</body>
+</html>
